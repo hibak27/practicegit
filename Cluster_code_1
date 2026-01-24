@@ -1,0 +1,45 @@
+import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+# 1. Load your data
+df = pd.read_excel('your_file.xlsx') 
+
+# 2. Aggregation with a "Strictness" focus
+agg = df.groupby('uuid').agg(
+    total_recons=('comment_count', 'sum'),
+    active_days=('ticketsubmissiondate', 'nunique'),
+    mean_sim=('average_similarity', 'mean'),
+    std_sim=('average_similarity', 'std'),
+    mean_len=('average_comment_length', 'mean'),
+    std_len=('average_comment_length', 'std')
+).fillna(0) # Std dev of 1 entry is 0 (no variance)
+
+# 3. Feature Scaling
+features = ['total_recons', 'active_days', 'mean_sim', 'std_sim', 'mean_len', 'std_len']
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(agg[features])
+
+# 4. Clustering (K=3 to isolate 'Power Humans' from 'Bots')
+model = KMeans(n_clusters=3, random_state=42, n_init=10)
+agg['cluster'] = model.fit_predict(X_scaled)
+
+# 5. High-Precision Refinement (The "Human-in-the-loop" logic)
+# We only flag the cluster if it meets strict mechanical criteria
+agg['is_bot_candidate'] = False
+
+# Find the cluster with the highest mean similarity
+bot_cluster_id = agg.groupby('cluster')['mean_sim'].mean().idxmax()
+
+# Apply strict precision filters to the identified cluster
+agg.loc[
+    (agg['cluster'] == bot_cluster_id) & 
+    (agg['mean_sim'] >= 0.99) &   # Must be nearly identical
+    (agg['std_sim'] <= 0.01) &    # Must have almost no variation
+    (agg['total_recons'] > 5),    # Ignore low-volume anomalies
+    'is_bot_candidate'
+] = True
+
+# 6. Save results
+agg.to_excel('bot_identification_results.xlsx')
