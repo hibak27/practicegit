@@ -1,0 +1,20 @@
+plt.figure(figsize=(10, 7))
+sns.scatterplot(
+    data=monthly_df, 
+    x='total_comments', 
+    y='mean_sim', 
+    hue='cluster', 
+    palette='Set1', 
+    s=120,
+    alpha=0.7
+)
+
+# Draw the High-Precision "Bot Zone" lines
+plt.axhline(y=0.98, color='red', linestyle='--', label='High Sim Threshold')
+plt.axvline(x=monthly_df['total_comments'].quantile(0.9), color='orange', linestyle='--', label='High Volume Threshold')
+
+plt.title('Identifying the Bot Zone: Volume vs. Similarity')
+plt.xlabel('Total Monthly Reconsiderations')
+plt.ylabel('Average Similarity Score (1.0 = Identical)')
+plt.legend()
+plt.savefig('bot_zone_plot.png')
