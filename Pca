@@ -1,0 +1,27 @@
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.decomposition import PCA
+
+# 1. Reduce the 6 features into 2 Principal Components
+pca = PCA(n_components=2)
+pca_results = pca.fit_transform(X_scaled) # Use the scaled data from previous steps
+
+monthly_df['pca1'] = pca_results[:, 0]
+monthly_df['pca2'] = pca_results[:, 1]
+
+# 2. Plotting
+plt.figure(figsize=(10, 7))
+sns.scatterplot(
+    data=monthly_df, 
+    x='pca1', y='pca2', 
+    hue='cluster', 
+    palette='viridis', 
+    style='cluster', 
+    s=100
+)
+
+plt.title('Monthly UUID Clusters (PCA Projection)')
+plt.xlabel('Component 1 (Volume & Complexity)')
+plt.ylabel('Component 2 (Consistency & Similarity)')
+plt.grid(True, alpha=0.3)
+plt.savefig('cluster_pca.png')
