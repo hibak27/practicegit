@@ -1,0 +1,34 @@
+graph TD
+    Start([Start Monthly Analysis]) --> CheckRatio{Bot Day Ratio}
+
+    %% HUMAN PATH (< 0.4)
+    CheckRatio -- "< 0.4" --> CheckCV_H{CV Sim > 0.2 AND CV Len > 0.2?}
+    CheckCV_H -- Yes --> HUMAN[HUMAN: High Variance]
+    CheckCV_H -- No --> H_UNCERTAIN[Uncertain Human Pattern]
+
+    %% SUSPECT PATH (0.4 - 0.6)
+    CheckRatio -- "0.4 to 0.6" --> CheckDays_S{Active Days >= 3?}
+    CheckDays_S -- Yes --> CheckCV_S{CV Sim 0.1-0.2 AND CV Len 0.1-0.2?}
+    CheckCV_S -- Yes --> SUSPECT[SUSPECT: Moderate Consistency]
+    CheckCV_S -- No --> S_UNCERTAIN[Uncertain Suspect Pattern]
+
+    %% BOT/PROSPECT PATH (>= 0.6)
+    CheckRatio -- ">= 0.6" --> CheckDays_B{Active Days}
+    
+    %% Bot Logic
+    CheckDays_B -- ">= 5" --> CheckCV_B{CV Sim <= 0.1 AND CV Len <= 0.1?}
+    CheckCV_B -- Yes --> BOT[BOT: Consistent Automation]
+
+    %% Prospect Logic
+    CheckDays_B -- ">= 3" --> CheckCV_P{CV Sim == 0 AND CV Len == 0?}
+    CheckCV_P -- Yes --> PROSPECT[PROSPECT: Exact Repetition]
+    
+    %% Fallback
+    CheckCV_B -- No --> B_UNCERTAIN[High Activity / High Variance]
+    CheckCV_P -- No --> B_UNCERTAIN
+
+    %% Styling
+    style BOT fill:#ffcccc,stroke:#cc0000,color:#000
+    style PROSPECT fill:#ffdddd,stroke:#cc0000,color:#000
+    style SUSPECT fill:#fff4cc,stroke:#ffbb00,color:#000
+    style HUMAN fill:#ccffcc,stroke:#006600,color:#000
