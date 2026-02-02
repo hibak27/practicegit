@@ -1,0 +1,44 @@
+graph TD
+    Start([Start Daily Analysis]) --> CheckCount{Check Count}
+
+    %% High Volume Path
+    CheckCount -- "Count >= 30" --> CheckSimHigh{Similarity >= 0.98?}
+    CheckSimHigh -- Yes --> CheckLenHigh{Length >= 400?}
+    CheckLenHigh -- "Yes (Score 10/8.75)" --> BOT_AUTO[BOT: Automated System]
+    CheckLenHigh -- No --> UNC_VOL[Unclassified High Volume]
+
+    CheckSimHigh -- No --> CheckSimMod{Similarity > 0.96?}
+    CheckSimMod -- Yes --> CheckLenBulk{Length >= 800?}
+    CheckLenBulk -- "Yes (Score 7.5)" --> BOT_BULK[BOT: Bulk Variations]
+    
+    %% Moderate Volume Path
+    CheckCount -- "Count 10-29" --> CheckSimMod2{Similarity >= 0.98?}
+    CheckSimMod2 -- Yes --> CheckLenTemplate{Length >= 800?}
+    CheckLenTemplate -- "Yes (Score 8.75)" --> BOT_SCRIPT[BOT: Scripted Template]
+    
+    CheckSimMod2 -- No --> CheckSimSuspect{Similarity > 0.96?}
+    CheckSimSuspect -- Yes --> CheckLenSuspect{Length 400-800?}
+    CheckLenSuspect -- "Yes (Score 5)" --> SUS_HEAVY[SUSPECT: Heavy Template Use]
+    
+    CheckSimSuspect -- No --> CheckLenHumanBusy{Length 50-400?}
+    CheckLenHumanBusy -- "Yes (Score 1.25)" --> HUMAN_BUSY[HUMAN: Busy Manual]
+
+    %% Low Volume Path
+    CheckCount -- "Count < 10" --> CheckSimLow{Similarity >= 0.98?}
+    CheckSimLow -- Yes --> CheckLenCopy{Length >= 400?}
+    CheckLenCopy -- "Yes (Score 6.25)" --> SUS_MANUAL[SUSPECT: Manual Copy-Paste]
+    
+    CheckSimLow -- No --> CheckSimNatural{Similarity < 0.96?}
+    CheckSimNatural -- Yes --> CheckLenRare{Length >= 800?}
+    CheckLenRare -- Yes --> HUMAN_POLICY[HUMAN/SUSPECT: Policy Paste]
+    CheckLenRare -- No --> HUMAN_NATURAL[HUMAN: Natural Writing]
+
+    %% Styling
+    style BOT_AUTO fill:#ffcccc,stroke:#cc0000,color:#000
+    style BOT_BULK fill:#ffcccc,stroke:#cc0000,color:#000
+    style BOT_SCRIPT fill:#ffcccc,stroke:#cc0000,color:#000
+    style SUS_HEAVY fill:#fff4cc,stroke:#ffbb00,color:#000
+    style SUS_MANUAL fill:#fff4cc,stroke:#ffbb00,color:#000
+    style HUMAN_BUSY fill:#ccffcc,stroke:#006600,color:#000
+    style HUMAN_NATURAL fill:#ccffcc,stroke:#006600,color:#000
+    style HUMAN_POLICY fill:#e6e6e6,stroke:#666,color:#000
