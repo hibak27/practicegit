@@ -266,7 +266,17 @@ def generate_overall_insights(final_df: pd.DataFrame) -> str:
 def write_excel(final_df: pd.DataFrame, narrative_df: pd.DataFrame,
                 overall_text: str, output_file: str):
 
-    with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
+    # ── Sanitize NaN / Inf before writing ─────────────────────────────
+    # xlsxwriter raises TypeError on NaN/Inf in numeric cells.
+    final_df = final_df.copy()
+    for col in final_df.columns:
+        if final_df[col].dtype == float:
+            final_df[col] = final_df[col].replace([float("inf"), float("-inf")], 0).fillna(0)
+        else:
+            final_df[col] = final_df[col].fillna("")
+
+    with pd.ExcelWriter(output_file, engine="xlsxwriter",
+                        engine_kwargs={"options": {"nan_inf_to_errors": True}}) as writer:
         wb = writer.book
 
         # ── Formats ───────────────────────────────────────────────────────
@@ -464,3 +474,4 @@ def run_analysis(input_file: str = INPUT_FILE, output_file: str = OUTPUT_FILE):
 # ─────────────────────────────────────────────
 if __name__ == "__main__":
     final_df = run_analysis()
+
